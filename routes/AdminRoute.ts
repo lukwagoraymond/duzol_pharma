@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { CreateVendor, GetVendors, GetVendorByID } from '../controllers';
+import { createVendor, getVendors, getVendorByID } from '../controllers';
 
 
 const router = Router();
 
-router.post('/vendor', CreateVendor);
-router.get('/vendors', GetVendors);
-router.get('/vendor/:id', GetVendorByID);
+router.post('/vendor', createVendor);
+router.get('/vendors', getVendors);
+router.get('/vendor/:id', getVendorByID);
 
 router.get('/', (req: Request, res: Response) => {
   res.json({ message: "Hello from Admin" });

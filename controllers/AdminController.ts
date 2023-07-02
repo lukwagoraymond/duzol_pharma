@@ -16,7 +16,7 @@ export const findVendor = async(id: string | undefined, email?: string) => {
  * @res {string} ObjectId of vendor object created and stored
  * @return {number} Status code 200 and the vendor generated ID
  */
-export const CreateVendor = async (req: Request, res: Response) => {
+export const createVendor = async (req: Request, res: Response) => {
   const { name, ownerName, productType, pincode, address, phone, email, password } = <CreateVendorInput>req.body;
 
   const vendorExists = await findVendor('', email);
@@ -55,7 +55,7 @@ export const CreateVendor = async (req: Request, res: Response) => {
  * @res {List} List containing vendor JSON objects in system
  * @return {List} Status code 200 and List of Vendors
  */
-export const GetVendors = async (req: Request, res: Response) => {
+export const getVendors = async (req: Request, res: Response) => {
   // Add pagination later in the 
   const vendorList = await Vendor.find();
   if (vendorList) {
@@ -71,7 +71,7 @@ export const GetVendors = async (req: Request, res: Response) => {
  * @res {string} ObjectId of vendor object created and stored
  * @return {number} Status code 200 and the vendor generated ID
  */
-export const GetVendorByID = async (req: Request, res: Response) => {
+export const getVendorByID = async (req: Request, res: Response) => {
   const vendorId = req.params.id;
   if (!vendorId) return res.status(404).json({ error: 'Insert Vendor ID'});
   const vendor = await findVendor(vendorId);

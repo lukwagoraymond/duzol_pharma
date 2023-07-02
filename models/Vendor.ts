@@ -1,11 +1,12 @@
 import mongoose from "mongoose";
-import { generateSalt, hashPassword } from "../utils";
+import { generateSalt, hashPassword, validatePassword } from "../utils";
+import { findVendor } from '../controllers/AdminController';
 
 // interface representing a document in MongoDB
 interface VendorDoc extends mongoose.Document {
   name: string;
   ownerName: string;
-  productType: string;
+  productType: [string];
   pincode: string;
   address: string;
   phone: string;
@@ -20,8 +21,13 @@ interface VendorDoc extends mongoose.Document {
   lng: number;
 }
 
+// interface representing model methods connected to above document
+interface VendorModel extends mongoose.Model<VendorDoc, mongoose.Document> {
+  authLogin(email: string, password: string): mongoose.HydratedDocument<VendorDoc>;
+}
+
 // Create model Schema corresponding to the document interface.
-const vendorSchema = new mongoose.Schema({
+const vendorSchema: mongoose.Schema = new mongoose.Schema({
   name: { type: String, required: true },
   ownerName: { type: String, required: true },
   productType: { type: [String] },
@@ -63,8 +69,19 @@ vendorSchema.pre('save', async function (next) {
   next();
 });
 
+// Model Static Method to support Login Authentication of this Vendor
+vendorSchema.statics.authLogin = async function (email: string, password: string) {
+  const existingVendor = await findVendor('', email);
+  if (existingVendor) {
+    const auth = await validatePassword(password, existingVendor.password);
+    if (auth) {
+      return existingVendor;
+    } throw Error('incorrect password');
+  } throw Error('incorrect Email input');
+};
+
 
 // Create Model while incorporating for vendor dto
-const Vendor = mongoose.model<VendorDoc>('vendor', vendorSchema);
+const Vendor = mongoose.model<VendorDoc, VendorModel>('vendor', vendorSchema);
 
 export { Vendor };
