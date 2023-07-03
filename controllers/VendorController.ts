@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { EditVendorInputs, VendorLoginInputs } from "../dto";
 import { Vendor } from "../models/Vendor";
+import { Product } from "../models";
 import { generateSignature } from "../utils";
 import { findVendor } from "./AdminController";
 
@@ -91,4 +92,55 @@ export const updateVendorService = async (req: Request, res: Response) => {
     //return res.status(200).json(existingVendor);
   }
   return res.status(400).json({ error: 'Vendor Information Not Found' });
+}
+
+/**
+ * Business Logic: Authorised Vendors add pharmacy products to their catalog
+ * @req {Object} contains authenticated user payload from CreateProductInputs interface
+ * @res {Object} a JSON object containing product add to vendor catalog
+ * @return {Object} Status code 201 and list of products added.
+ */
+export const addProducts = async (req:Request, res:Response) => {
+  const user = req.user;
+  if(user) {
+    const { name, description, category, productType, deliveryTime, price } = req.body;
+    const vendor = await findVendor(user._id);
+    if(vendor) {
+      // Implement check for it product name exists return error here b4 creation later
+      const createdProduct = await Product.create({
+        vendorId: vendor._id,
+        name: name,
+        description: description,
+        category: category,
+        productType: productType,
+        deliveryTime: deliveryTime,
+        price: price,
+        images: ['mock_image.png'],
+        rating: 1
+      });
+      vendor.products.push(createdProduct);
+      const updatedProductArr = await vendor.save();
+      return res.status(201).json(updatedProductArr);
+    }
+  }
+  return res.status(404).json({ error: 'Can\'t add product to catalog' });
+}
+
+/**
+ * Business Logic: Authorised users get list of pharmacy products from vendor catalog
+ * @req {Object} contains authenticated user payload from vendorPayload interface
+ * @res {Object} a JSON object containing List of vendor's products
+ * @return {Object} Status code 200 List of particular Vendor Products
+ */
+export const getProducts = async (req:Request, res:Response) => {
+  const user = req.user;
+  if(user) {
+    const pharmaProducts = await Product.find({ vendorId: user._id });
+    if(pharmaProducts) {
+      res.status(200).json(pharmaProducts);
+      return;
+    }
+    return res.status(404).json({ error: 'Product Information Not Found' });
+  }
+  return res.status(404).json({ error: 'Vendor Informaton Not Found' });
 }

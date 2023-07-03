@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import mongoose from "mongoose";
 import { CreateVendorInput } from "../dto";
 import { Vendor } from "../models";
 
@@ -36,12 +37,9 @@ export const createVendor = async (req: Request, res: Response) => {
       password: password,
       serviceAvailable: false,
       coverImages: [],
-      rating: 1
-      /*products: [{
-        type: mongoose.SchemaTypes.ObjectId,
-        ref: 'product'
-      }],
-      lat: { type: Number },
+      rating: 1,
+      products: []
+      /*lat: { type: Number },
       lng: { type: Number } */
     });
     return res.status(201).json( { vendor: vendorCreated._id });

@@ -1,7 +1,7 @@
 export interface CreateVendorInput{
   name: string;
   ownerName: string;
-  productType: string;
+  productType: [string];
   pincode: string;
   address: string;
   phone: string;

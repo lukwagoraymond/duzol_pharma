@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from "express";
-import { vendorLogin, getVendorProfile, updateVendorProfile, updateVendorService } from "../controllers";
+import { vendorLogin, getVendorProfile, updateVendorProfile, updateVendorService, addProducts, getProducts } from "../controllers";
 import { authenticate } from "../middlewares";
 
 const router = Router();
@@ -14,5 +14,8 @@ router.use(authenticate);
 router.get('/profile', getVendorProfile);
 router.patch('/profile', updateVendorProfile);
 router.patch('/service', updateVendorService);
+
+router.get('/products', getProducts);
+router.post('/products', addProducts);
 
 export { router as VendorRoute };

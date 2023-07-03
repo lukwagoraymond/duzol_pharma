@@ -23,7 +23,7 @@ interface VendorDoc extends mongoose.Document {
 
 // interface representing model methods connected to above document
 interface VendorModel extends mongoose.Model<VendorDoc, mongoose.Document> {
-  authLogin(email: string, password: string): mongoose.HydratedDocument<VendorDoc>;
+  authLogin(email: string, password: string): mongoose.HydratedDocument<VendorDoc, mongoose.Document>;
 }
 
 // Create model Schema corresponding to the document interface.
@@ -41,11 +41,11 @@ const vendorSchema: mongoose.Schema = new mongoose.Schema({
   serviceAvailable: { type: Boolean },
   coverImages: { type: [String] },
   rating: { type: Number },
-  /*products: [{
+  products: [{
     type: mongoose.SchemaTypes.ObjectId,
     ref: 'product'
-  }],
-  lat: { type: Number },
+  }]
+  /*lat: { type: Number },
   lng: { type: Number } */
 },
 { 
