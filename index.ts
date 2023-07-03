@@ -1,4 +1,5 @@
 import express from 'express';
+import path from 'path';
 import bodyParser from 'body-parser';
 import dbConnection from './services/Database';
 
@@ -13,6 +14,10 @@ const StartServer = async () => {
   app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
 
+// Configuration for Static-files
+  app.use(express.static(path.join(__dirname, 'images')));
+
+// Middleware to handle routes under different services
   app.use('/admin', AdminRoute);
   app.use('/vendor', VendorRoute);
 

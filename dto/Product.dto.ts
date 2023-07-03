@@ -4,5 +4,6 @@ export interface CreateProductInputs {
   category: string;
   productType: string;
   deliveryTime: number;
-  price: number
+  price: number;
+  images: [string];
 }

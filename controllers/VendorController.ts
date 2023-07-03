@@ -74,6 +74,27 @@ export const updateVendorProfile = async (req: Request, res: Response) => {
 }
 
 /**
+ * Business Logic: Authorised Users can update vendor Profile Photo.
+ * @req {string} contains File Photo
+ * @res {Object} a JSON object updated to contain coverImage
+ * @return {Object} Status code 201 and Vendor updated Profile JSON Object
+ */
+export const updateVendorCoverImage = async (req:Request, res:Response) => {
+  const user = req.user;
+  if(user) {
+    const vendor = await findVendor(user._id);
+    if(vendor) {
+      const files = req.files as [Express.Multer.File];
+      const images = files.map((file: Express.Multer.File) => file.filename);
+      vendor.coverImages.push(...images);
+      const updateCoverImage = await vendor.save();
+      return res.status(201).json(updateCoverImage);
+    }
+  }
+  return res.status(404).json({ error: 'Can\'t add Cover Image to Profile' });
+}
+
+/**
  * Business Logic: Authorised Vendors turn their Service Availability on/off
  * @req {Object} contains authenticated user payload from vendorPayload interface
  * @res {Object} a JSON object containing updatedvendor profile information
@@ -89,7 +110,6 @@ export const updateVendorService = async (req: Request, res: Response) => {
       return res.status(200).json(updatedResults);
     }
     return res.status(404).json({ error: `User: ${user._id} serviceAvailablity not updated!` });
-    //return res.status(200).json(existingVendor);
   }
   return res.status(400).json({ error: 'Vendor Information Not Found' });
 }
@@ -106,6 +126,9 @@ export const addProducts = async (req:Request, res:Response) => {
     const { name, description, category, productType, deliveryTime, price } = req.body;
     const vendor = await findVendor(user._id);
     if(vendor) {
+      const files = req.files as [Express.Multer.File];
+      const images = files.map((file: Express.Multer.File) => file.filename);
+
       // Implement check for it product name exists return error here b4 creation later
       const createdProduct = await Product.create({
         vendorId: vendor._id,
@@ -115,7 +138,7 @@ export const addProducts = async (req:Request, res:Response) => {
         productType: productType,
         deliveryTime: deliveryTime,
         price: price,
-        images: ['mock_image.png'],
+        images: images,
         rating: 1
       });
       vendor.products.push(createdProduct);
