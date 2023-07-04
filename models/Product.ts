@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from "mongoose";
 
 // interface representing a document in MongoDB
-interface ProductDoc extends Document {
+export interface ProductDoc extends Document {
   vendorId: string;
   name: string;
   description: string;

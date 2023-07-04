@@ -1,4 +1,4 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 import multer from "multer";
 import { vendorLogin, getVendorProfile, updateVendorProfile, updateVendorService, addProducts, getProducts, updateVendorCoverImage } from "../controllers";
 import { authenticate } from "../middlewares";
