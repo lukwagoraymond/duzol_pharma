@@ -81,7 +81,7 @@ vendorSchema.statics.authLogin = async function (email: string, password: string
 };
 
 
-// Create Model while incorporating for vendor dto
+// Create Model while incorporating for vendordoc interface
 const Vendor = mongoose.model<VendorDoc, VendorModel>('vendor', vendorSchema);
 
 export { Vendor };

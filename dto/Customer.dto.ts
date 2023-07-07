@@ -1,0 +1,19 @@
+ import { IsEmail, Length } from "class-validator";
+export class CreateCustomerInputs {
+  @IsEmail()
+  email: string;
+
+  @Length(7, 13)
+  phone: string;
+
+  @Length(6, 24)
+  password: string
+}
+
+// Add validation to phone to make sure its in form of +256787592891 <countrycode><number>
+
+export interface CustomerPayload {
+  _id: string;
+  email: string;
+  verified: boolean;
+}

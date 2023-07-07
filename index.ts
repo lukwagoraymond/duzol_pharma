@@ -14,7 +14,7 @@ const StartServer = async () => {
   await App(app);
 
   app.listen(PORT, () => {
-    console.clear();
+    //console.clear();
     console.log(`Server is listening on PORT ${PORT}`);
   });
 }

@@ -1,7 +1,7 @@
 import express, { Application } from 'express';
 import bodyParser from 'body-parser';
 import path from 'path';
-import { AdminRoute, ShoppingRoute, VendorRoute } from '../routes';
+import { AdminRoute, ShoppingRoute, VendorRoute, CustomerRoute } from '../routes';
 
 export default async (app: Application) => {
 
@@ -15,6 +15,7 @@ export default async (app: Application) => {
 // Middleware to handle routes under different services
   app.use('/admin', AdminRoute);
   app.use('/vendor', VendorRoute);
+  app.use('/customer', CustomerRoute);
   app.use(ShoppingRoute);
 
   return app;

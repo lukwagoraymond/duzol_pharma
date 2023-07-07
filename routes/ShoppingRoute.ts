@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router } from "express";
 import { getPharmacyById, getProductAvailability, getProductIn30min, getTopPharmacies, searchProducts } from "../controllers";
 
 const router = Router();
