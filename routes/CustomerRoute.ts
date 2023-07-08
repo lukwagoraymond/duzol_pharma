@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction} from 'express';
+import express from 'express';
 
 import { customerSignUp, customerLogin, customerVerify, requestOtp, getCustomerProfile, editCustomerProfile } from '../controllers';
 

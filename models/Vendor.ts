@@ -65,7 +65,8 @@ const vendorSchema: mongoose.Schema = new mongoose.Schema({
 vendorSchema.pre('save', async function (next) {
   const salt = await generateSalt();
   this.salt = salt;
-  this.password = await hashPassword(this.password, salt);
+  const password = await hashPassword(this.password, salt);
+  this.password = password;
   next();
 });
 

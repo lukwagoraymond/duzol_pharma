@@ -1,4 +1,5 @@
- import { IsEmail, Length } from "class-validator";
+import { IsEmail, Length } from "class-validator";
+
 export class CreateCustomerInputs {
   @IsEmail()
   email: string;
@@ -16,4 +17,23 @@ export interface CustomerPayload {
   _id: string;
   email: string;
   verified: boolean;
+}
+
+export class UserLoginInput {
+  @IsEmail()
+  email: string;
+
+  @Length(6, 24)
+  password: string;
+}
+
+export class EditCustomerProfileInput {
+  @Length(2, 20)
+  firstName: string;
+
+  @Length(2, 20)
+  lastName: string;
+
+  @Length(3, 57)
+  address: string;
 }
