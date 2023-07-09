@@ -1,9 +1,11 @@
-import express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
-import { CreateCustomerInputs, EditCustomerProfileInput, UserLoginInput } from '../dto';
-import { generateOtp, generateSignature, hashPassword, onRequestOtp, validatePassword } from '../utils';
-import { Customer } from '../models';
+import { CreateCustomerInputs, EditCustomerProfileInput, UserLoginInput, CartItem } from '../dto';
+import { generateOtp, generateSignature, onRequestOtp, validatePassword } from '../utils';
+import { Customer, Order, Product } from '../models';
+
+/* ---------------------------- Customer Mgt Section ---------------------------------- */
 
 /**
  * Business Logic: Creates a new Customer User
@@ -36,7 +38,9 @@ export const customerSignUp = async (req: Request, res: Response) => {
       address: '',
       verified: false,
       lat: 0,
-      lng: 0
+      lng: 0,
+      cart: [],
+      orders: []
     });
     await onRequestOtp(otp, phone);
     // Generate a JWT token Signature
@@ -181,4 +185,91 @@ export const editCustomerProfile = async (req: Request, res: Response) => {
     }
   }
   return res.status(400).json({ error: 'User Not Authorized to Update Profile' })
+}
+
+/* ---------------------------- Order Section ---------------------------------- */
+
+/**
+ * Business Logic: Authenticated user creates an Order based on Products
+ * @req {Object} Authenticated Customer Payload Id, email, verified + 
+ *                { Product._id, unit }
+ * @res {Object} JSON Object of customer profile with cart items ordered
+ * @return {Object} Status code 201 + customer profile with cart items ordered
+ */
+export const createOrder = async (req: Request, res: Response) => {
+  const user = req.user;
+  if (user) {
+    const customer = await Customer.findById(user._id);
+    const orderId = `${Math.floor(Math.random() * 89999) + 1000}`;
+    const cart = <[CartItem]>req.body;
+    let cartItems = Array();
+    let netAmount = 0.0;
+    let vendorId;
+    const products = await Product.find().where('_id').in(cart.map(item => item._id)).exec();
+    products.map(product => {
+      cart.map(({_id, unit}) => {
+        if(product._id == _id) {
+          vendorId = product.vendorId;
+          netAmount += (product.price * unit);
+          cartItems.push({ product, unit });
+        }
+      });
+    });
+    if (cartItems) {
+      // Create an Order
+      const orderCreated = await Order.create({
+        orderId: orderId,
+        vendorId: vendorId,
+        items: cartItems,
+        totalAmount: netAmount,
+        paidThrough: 'Mobile-Money',
+        orderDate: new Date(),
+        orderStatus: 'Waiting',
+        paymentResponse: '',
+        deliveryId: '',
+        deliveryTime: 33
+      });
+      // Add created Order to customer profile
+      if (orderCreated) {
+        customer?.orders.push(orderCreated);
+        const updatedCustomerProfile = await customer?.save();
+        return res.status(200).json(updatedCustomerProfile);
+      }
+    }
+  }
+  return res.status(400).json({ error: 'Error with Created Order!' });
+}
+
+/**
+ * Business Logic: Authenticated user's orders placed
+ * @req {Object} Authenticated Customer Payload Id, email, verified
+ * @res {Object} JSON Object of customer product orders
+ * @return {Object} Status code 200 + orders tagged to a user
+ */
+export const getOrders = async (req: Request, res: Response) => {
+  const user = req.user;
+  if (user) {
+    const customer = await Customer.findById(user._id).populate('orders');
+    if (customer) {
+      return res.status(200).json(customer.orders);
+    }
+  }
+  return res.status(400).json({ error: 'User Not Authorised to Access Orders' });
+}
+
+/**
+ * Business Logic: Authenticated user gets particular order details
+ * @req {Object} Authenticated Customer Payload Id, email, verified
+ * @res {Object} JSON Object of particular order details
+ * @return {Object} Status code 200 + particular order details
+ */
+export const getOrdersById = async (req: Request, res: Response) => {
+  const orderId = req.params.id;
+  if (orderId) {
+    const order = await Order.findById(orderId).populate('items.product');
+    if (order) {
+      return res.status(200).json(order);
+    }
+  }
+  return res.status(404).json({ error: 'Order Not Found' });
 }

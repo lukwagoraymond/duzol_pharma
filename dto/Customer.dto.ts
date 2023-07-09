@@ -37,3 +37,8 @@ export class EditCustomerProfileInput {
   @Length(3, 57)
   address: string;
 }
+
+export interface CartItem {
+  _id: string;
+  unit: number;
+}

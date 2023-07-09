@@ -1,5 +1,6 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { generateSalt, hashPassword, validatePassword } from "../utils";
+import { OrderDoc } from "./index";
 
 //Interface representing a document in MongoDB
 interface CustomerDoc extends Document {
@@ -15,8 +16,8 @@ interface CustomerDoc extends Document {
   otp_expiry: Date;
   lat: number;
   lng: number;
-  //cart: [any];
-  //orders: [OrderDoc]
+  cart: [any];
+  orders: [OrderDoc]
 }
 
 // interface representing model methods connected to above document
@@ -37,7 +38,18 @@ const customerSchema: mongoose.Schema = new mongoose.Schema({
   otp: { type: Number },
   otp_expiry: { type: Date },
   lat: { type: Number },
-  lng: { type: Number }
+  lng: { type: Number },
+  cart: [
+    {
+      product: { type: Schema.Types.ObjectId, ref: 'product', require: true },
+      unit: { type: Number, require: true }
+    }
+  ],
+  orders: [
+    {
+      type: Schema.Types.ObjectId, ref: 'order'
+    }
+  ]
 }, 
 {
   toJSON: {
@@ -54,11 +66,15 @@ const customerSchema: mongoose.Schema = new mongoose.Schema({
 
 // Pre-Hook Middleware function run before document is saved in DB
 customerSchema.pre('save', async function (next) {
-  const salt = await generateSalt();
-  this.salt = salt;
-  const password = await hashPassword(this.password, salt);
-  this.password = password;
-  next();
+  if (this.isModified("password") || this.isNew) {
+    const salt = await generateSalt();
+    this.salt = salt;
+    const password = await hashPassword(this.password, salt);
+    this.password = password;
+    next();
+  } else {
+    return next();
+  }
 });
 
 // Model Static Method to support Login Authentication of this Vendor

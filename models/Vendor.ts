@@ -63,11 +63,15 @@ const vendorSchema: mongoose.Schema = new mongoose.Schema({
 
 // Pre-Hook Middleware function run before document is saved in DB
 vendorSchema.pre('save', async function (next) {
-  const salt = await generateSalt();
-  this.salt = salt;
-  const password = await hashPassword(this.password, salt);
-  this.password = password;
-  next();
+  if (this.isModified("password") || this.isNew) {
+    const salt = await generateSalt();
+    this.salt = salt;
+    const password = await hashPassword(this.password, salt);
+    this.password = password;
+    next();
+  } else {
+    return next();
+  }
 });
 
 // Model Static Method to support Login Authentication of this Vendor
