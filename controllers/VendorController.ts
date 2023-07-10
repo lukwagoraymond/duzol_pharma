@@ -1,10 +1,11 @@
 import { Request, Response } from "express";
 import { EditVendorInputs, VendorLoginInputs } from "../dto";
 import { Vendor } from "../models/Vendor";
-import { Product } from "../models";
+import { Product, Order } from "../models";
 import { generateSignature } from "../utils";
 import { findVendor } from "./AdminController";
 
+/* ----------------------- Vendor Profile Section ---------------------------- */
 /**
  * Business Logic: Authenticate and Log Vendor into System
  * @req {string} contains incoming registered email and password
@@ -114,6 +115,7 @@ export const updateVendorService = async (req: Request, res: Response) => {
   return res.status(400).json({ error: 'Vendor Information Not Found' });
 }
 
+/* ----------------------- Vendor Product Section ---------------------------- */
 /**
  * Business Logic: Authorised Vendors add pharmacy products to their catalog
  * @req {Object} contains authenticated user payload from CreateProductInputs interface
@@ -166,4 +168,69 @@ export const getProducts = async (req:Request, res:Response) => {
     return res.status(404).json({ error: 'Product Information Not Found' });
   }
   return res.status(404).json({ error: 'Vendor Informaton Not Found' });
+}
+/* ----------------------- Order Processing Section ---------------------------- */
+
+/**
+ * Business Logic: Authorised Vendors can get list of orders to be processed by them
+ * @req {Object} contains authenticated Vendor payload from vendorPayload interface
+ * @res {Object} a JSON object containing List of Customer Orders
+ * @return {Object} Status code 200 + List of Customer Orders
+ */
+export const getCurrentOrders =async (req:Request, res:Response) => {
+  const user = req.user;
+  if (user) {
+    const orders = await Order.find({ vendorId: user._id }).populate('items.product');
+    if (orders) {
+      return res.status(200).json(orders);
+    }
+    return res.status(404).json({ error: 'Orders Not Found!' });
+  }
+  return res.status(400).json({ error: 'Vendor Not Authorised to View Orders!' });
+}
+
+/**
+ * Business Logic: Authorised Vendors get details on particular order
+ * @req {Object} contains authenticated Vendor payload from vendorPayload interface
+ *                + order _id
+ * @res {Object} a JSON object containing details of particular order
+ * @return {Object} Status code 200 + Details of particular Order
+ */
+export const getOrderDetails = async (req:Request, res:Response) => {
+  const orderId = req.params.id;
+  const user = req.user;
+  if (user) {
+    const orderDetails = await Order.findById(orderId).
+    populate('items.product').
+    where('vendorId').
+    equals(`${user._id}`).
+    exec();
+    if (orderDetails) {
+      return res.status(200).json(orderDetails);
+    }
+    return res.status(404).json({ error: 'Order Details Not Found!' });
+  }
+  return res.status(400).json({ error: 'Vendor Not Authorised to View Order!' });
+}
+
+/**
+ * Business Logic: Authorised Vendors get to process particular order ready for delivery
+ * @req {Object} contains authenticated payload + orderStatus, remarks, deliveryTime
+ * @res {Object} a JSON object containing Updated Order Status
+ * @return {Object} Status code 200 + Updated Order Status.
+ */
+export const processOrder = async (req:Request, res:Response) => {
+  const orderId = req.params.id;
+  const { orderStatus, remarks, deliveryTime } = req.body;
+  if (orderId) {
+    const order = await Order.findById(orderId).populate('items.product');
+    if (order) {
+      order.orderStatus = orderStatus;
+      order.remarks = remarks;
+      if (deliveryTime) order.deliveryTime = deliveryTime;
+      const updatedOrder = await order.save();
+      return res.status(200).json(updatedOrder);
+    }
+  }
+  return res.status(400).json({ error: 'Not Authorised to Process Order!'});
 }

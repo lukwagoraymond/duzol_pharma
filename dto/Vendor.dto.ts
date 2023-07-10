@@ -27,3 +27,9 @@ export interface VendorPayload{
   name: string;
   productType: [string];
 }
+
+export interface UpdateOrderStatus{
+  orderStatus: string;
+  deliveryTime: number;
+  remarks: string;
+}

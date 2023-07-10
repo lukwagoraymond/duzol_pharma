@@ -8,7 +8,8 @@ export interface OrderDoc extends mongoose.Document {
   totalAmount: number; //50000
   paidThrough: string; //Mobile-Money, Credit-Card, Debit-Card
   orderDate: Date;
-  orderStatus: string;
+  orderStatus: string; //WAITING
+  remarks: string;
   paymentResponse: string; // { status: true, response: Bank Response }
   deliveryId: string;
   deliveryTime: number;
@@ -28,6 +29,7 @@ const orderSchema: mongoose.Schema = new mongoose.Schema({
   paidThrough: { type: String },
   orderDate: { type: Date },
   orderStatus: { type: String },
+  remarks: { type: String },
   paymentResponse: { type: String },
   deliveryId: { type: String },
   deliveryTime: { type: Number }
