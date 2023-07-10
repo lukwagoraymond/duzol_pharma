@@ -38,7 +38,7 @@ export class EditCustomerProfileInput {
   address: string;
 }
 
-export interface CartItem {
+export class CartItem {
   _id: string;
   unit: number;
 }

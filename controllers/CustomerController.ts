@@ -186,6 +186,101 @@ export const editCustomerProfile = async (req: Request, res: Response) => {
   }
   return res.status(400).json({ error: 'User Not Authorized to Update Profile' })
 }
+/* ---------------------------- Cart Section ---------------------------------- */
+
+/**
+ * Business Logic: Authenticated user adds product item to Cart
+ * @req {Object} Authenticated Customer Payload Id, email, verified + 
+ *                { Product._id, unit number }
+ * @res {Object} JSON Customer Oject with Cart key Populated
+ * @return {Object} Status code 201 + Cart key populated with product items
+ */
+export const addToCart = async (req:Request, res:Response) => {
+  const user = req.user;
+  if (user) {
+    const customer = await Customer.findById(user._id).populate('cart.product');
+    let cartItems = Array();
+    //console.log(`First CartArray: ${cartItems}`);
+    const requestCartItems = <CartItem>req.body;
+    //console.log(`Requested CartItems: ${requestCartItems._id, requestCartItems.unit}`);
+    const product = await Product.findById(requestCartItems._id);
+    //console.log(`Product: ${product}`);
+    if (product) {
+      if (customer) {
+        // Check for Cart items
+        cartItems = customer.cart;
+        //console.log(`First CartArray: ${cartItems}`);
+        if (cartItems.length > 0) {
+          // check cart and update unit number
+          let existProductItem = cartItems.filter((item) => 
+          item.product._id.toString() === requestCartItems._id);
+          //console.log(`Existing Products: ${existProductItem}`);
+          if (existProductItem.length > 0) {
+            const index = cartItems.indexOf(existProductItem[0]);
+            //console.log(`Print Index: ${index}`);
+            if (requestCartItems.unit > 0) {
+              cartItems[index] = { product, unit: requestCartItems.unit };
+              //console.log(`Update 1: CartArray: ${cartItems}`);
+            } else {
+              // if product unit == 0 then remove from cart array
+              cartItems.splice(index, 1);
+            }
+          } else {
+            cartItems.push({ product, unit: requestCartItems.unit });
+          }
+        } else {
+          // add new item product to cart
+          cartItems.push({ product, unit: requestCartItems.unit });
+        }
+        if (cartItems) {
+          //console.log(`Update 2: CartArray: ${cartItems}`);
+          customer.cart = cartItems as any;
+          const updatedCustomerCart = await customer.save();
+          return res.status(201).json(updatedCustomerCart.cart);
+        }
+      }
+    }
+  }
+  return res.status(400).json({ error: "Can't Add Order to Cart!" });
+}
+
+/**
+ * Business Logic: Authenticated user gets current product items in cart
+ * @req {Object} Authenticated Customer Payload Id, email, verified
+ * @res {Object} JSON Object of product items in cart currently
+ * @return {Object} Status code 200 + products in cart.
+ */
+export const getCart =async (req:Request, res:Response) => {
+  const user = req.user;
+  if (user) {
+    const customer = await Customer.findById(user._id);
+    if (customer) {
+      return res.status(200).json(customer.cart);
+    } else {
+      return res.status(404).json({ error: 'Cart is Empty!' });
+    }
+  }
+  return res.status(400).json({ error: 'User Not Authorised to see Cart!' });
+}
+
+/**
+ * Business Logic: Authenticated user empties items in their cart
+ * @req {Object} Authenticated Customer Payload Id, email, verified
+ * @res {Object} JSON Object of Empty Customer Cart
+ * @return {Object} Status code 200 + Customer Profile with Empty Cart
+ */
+export const deleteCart = async (req:Request, res:Response) => {
+  const user = req.user;
+  if (user) {
+    const customer = await Customer.findById(user._id).populate('cart.product').exec();
+    if (customer) {
+      customer.cart = [] as any;
+      const updatedCustomerCart = await customer.save();
+      return res.status(200).json(updatedCustomerCart);
+    }
+  }
+  res.status(400).json({ error: 'Not Authorised to Delete Cart!'});
+}
 
 /* ---------------------------- Order Section ---------------------------------- */
 
@@ -193,7 +288,7 @@ export const editCustomerProfile = async (req: Request, res: Response) => {
  * Business Logic: Authenticated user creates an Order based on Products
  * @req {Object} Authenticated Customer Payload Id, email, verified + 
  *                { Product._id, unit }
- * @res {Object} JSON Object of customer profile with cart items ordered
+ * @res {Object} JSON Object of customer profile with product items ordered
  * @return {Object} Status code 201 + customer profile with cart items ordered
  */
 export const createOrder = async (req: Request, res: Response) => {
