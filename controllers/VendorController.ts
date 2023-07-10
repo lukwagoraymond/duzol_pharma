@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { EditVendorInputs, VendorLoginInputs } from "../dto";
+import { EditVendorInputs, UpdateOrderStatus, VendorLoginInputs } from "../dto";
 import { Vendor } from "../models/Vendor";
 import { Product, Order } from "../models";
 import { generateSignature } from "../utils";
@@ -221,7 +221,7 @@ export const getOrderDetails = async (req:Request, res:Response) => {
  */
 export const processOrder = async (req:Request, res:Response) => {
   const orderId = req.params.id;
-  const { orderStatus, remarks, deliveryTime } = req.body;
+  const { orderStatus, remarks, deliveryTime } = <UpdateOrderStatus>req.body;
   if (orderId) {
     const order = await Order.findById(orderId).populate('items.product');
     if (order) {
