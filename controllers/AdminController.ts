@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
 import { CreateVendorInput } from "../dto";
-import { Vendor } from "../models";
+import { Transaction, Vendor } from "../models";
 
 export const findVendor = async(id: string | undefined, email?: string) => {
   if (email) {
@@ -24,7 +23,6 @@ export const createVendor = async (req: Request, res: Response) => {
   if (vendorExists !== null) {
     return res.json({ error: 'Vendor already exists with this EmailID' });
   }
-
   try {
     const vendorCreated = await Vendor.create({
       name: name,
@@ -78,4 +76,26 @@ export const getVendorByID = async (req: Request, res: Response) => {
   } else {
     return res.status(404).json({ error: 'Vendor Data not available' });
   }
+}
+
+/* ----------------------- Transactions Section ---------------------------- */
+export const getTransactions = async (req:Request, res:Response) => {
+  const transactions = await Transaction.find();
+  if (transactions) {
+    return res.status(200).json(transactions);
+  }
+  return res.json({ error: 'Transactions Data Not Available' });
+}
+
+export const getTransactionById = async (req:Request, res:Response) => {
+  const transactionId = req.params.id;
+  if (transactionId) {
+    const transaction = await Transaction.findById(transactionId);
+    if (transaction) {
+      return res.status(200).json(transaction);
+    } else {
+      return res.status(404).json({ error: 'Transaction Data Not Found!' });
+    }
+  }
+  return res.status(404).json({ error: 'Transaction ID Not Found!' });
 }

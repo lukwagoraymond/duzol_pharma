@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
 import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
-import { CreateCustomerInputs, EditCustomerProfileInput, UserLoginInput, CartItem } from '../dto';
+import { CreateCustomerInputs, EditCustomerProfileInput, UserLoginInput, CartItem, OrderInputs } from '../dto';
 import { generateOtp, generateSignature, onRequestOtp, validatePassword } from '../utils';
-import { Customer, Order, Product } from '../models';
+import { Customer, Offer, Order, Product, Transaction } from '../models';
 
 /* ---------------------------- Customer Mgt Section ---------------------------------- */
 
@@ -282,7 +282,57 @@ export const deleteCart = async (req:Request, res:Response) => {
   res.status(400).json({ error: 'Not Authorised to Delete Cart!'});
 }
 
+/* ---------------------------- Payment Section ---------------------------------- */
+
+/**
+ * Business Logic: Authenticated user Initiates a Payment for an Order
+ * @req {Object} Authenticated Customer Payload Id, email, verified
+ * @res {Object} JSON Object of validated offer
+ * @return {Object} Status code 200 + Validated Offer
+ */
+export const createPayment = async (req:Request, res:Response) => {
+  const user = req.user;
+  const { amount, paymentMode, offerId } = req.body;
+  let payableAmount = Number(amount);
+  if (user) {
+    const applied4Offer = await Offer.findById(offerId);
+    if (applied4Offer!.isActive) {
+      payableAmount = (payableAmount - applied4Offer!.offerAmount);
+    }
+    // continue to perform Payment Gateway with DusuPay / PayU || ? API - For Later
+    //
+    // Create a record of the transaction from the above Payment Gateway
+    const transaction = await Transaction.create({
+      customerId: user._id,
+      vendorId: '',
+      orderId: '',
+      orderValue: payableAmount,
+      offerUsed: offerId || 'NA',
+      status: 'OPEN',
+      paymentMode: paymentMode,
+      paymentResponse: 'Payment is cash on Delivery'
+    });
+    if (transaction) {
+      return res.status(201).json(transaction);
+    } else {
+      return res.status(400).json({ error: 'Transaction was not Created!' });
+    }
+  }
+  return res.status(400).json({ error: 'Customer Not Authorised to Make Payment!' });
+}
+
 /* ---------------------------- Order Section ---------------------------------- */
+
+/** Util Function to Support Verification of Transaction before Order is Created */
+const validateTransaction = async(transactionId: string) => {
+  const currentTransaction = await Transaction.findById(transactionId);
+  if (currentTransaction) {
+    if (currentTransaction.status.toLowerCase() !== 'failed') {
+      return { status: true, currentTransaction };
+    }
+  }
+  return { status: false, currentTransaction };
+}
 
 /**
  * Business Logic: Authenticated user creates an Order based on Products
@@ -293,16 +343,21 @@ export const deleteCart = async (req:Request, res:Response) => {
  */
 export const createOrder = async (req: Request, res: Response) => {
   const user = req.user;
+  const { transactionId, amount, items } = <OrderInputs>req.body
   if (user) {
+    // Validate Transaction Payment of earlier placed Cart Products
+    const { status, currentTransaction } = await validateTransaction(transactionId);
+    if (!status) {
+      return res.status(404).json({ error: "Order not Created Pending Payment!" });
+    }
     const customer = await Customer.findById(user._id);
     const orderId = `${Math.floor(Math.random() * 89999) + 1000}`;
-    const cart = <[CartItem]>req.body;
     let cartItems = Array();
     let netAmount = 0.0;
-    let vendorId;
-    const products = await Product.find().where('_id').in(cart.map(item => item._id)).exec();
+    let vendorId: any;
+    const products = await Product.find().where('_id').in(items.map(item => item._id)).exec();
     products.map(product => {
-      cart.map(({_id, unit}) => {
+      items.map(({_id, unit}) => {
         if(product._id == _id) {
           vendorId = product.vendorId;
           netAmount += (product.price * unit);
@@ -317,16 +372,25 @@ export const createOrder = async (req: Request, res: Response) => {
         vendorId: vendorId,
         items: cartItems,
         totalAmount: netAmount,
-        paidThrough: 'Mobile-Money',
+        paidAmount: amount,
         orderDate: new Date(),
         orderStatus: 'Waiting',
-        paymentResponse: '',
+        paymentResponse: 'I want it Top',
         deliveryId: '',
         deliveryTime: 33
       });
       // Add created Order to customer profile
       if (orderCreated) {
+        if (customer != undefined) {
+          customer.cart = [] as any;
+        }
         customer?.orders.push(orderCreated);
+        // Update Current Customer Transaction object
+        currentTransaction!.vendorId = vendorId;
+        currentTransaction!.orderId = orderId;
+        currentTransaction!.status = 'CONFIRMED';
+        await currentTransaction?.save();
+       
         const updatedCustomerProfile = await customer?.save();
         return res.status(200).json(updatedCustomerProfile);
       }
@@ -367,4 +431,27 @@ export const getOrdersById = async (req: Request, res: Response) => {
     }
   }
   return res.status(404).json({ error: 'Order Not Found' });
+}
+/* ---------------------------- Apply Offers Section ---------------------------------- */
+
+/**
+ * Business Logic: Authenticated user verifies validity of said offer
+ * @req {Object} Authenticated Customer Payload Id, email, verified
+ * @res {Object} JSON Object of validated offer
+ * @return {Object} Status code 200 + Validated Offer
+ */
+export const verifyOffer = async (req:Request, res:Response) => {
+  const offerId = req.params.id;
+  const user = req.user;
+  if (user) {
+    const applied4Offer = await Offer.findById(offerId);
+    if (applied4Offer) {
+      if (applied4Offer.isActive) {
+        return res.status(200).json({ message: 'Offer is Valid', offer: applied4Offer });
+      }
+    } else {
+      return res.status(404).json({ error: 'Applied for Offer Not Found!' });
+    }
+  }
+  return res.status(400).json({ error: 'User Not Authorised to Access Offer!' });
 }

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
-import { vendorLogin, getVendorProfile, updateVendorProfile, updateVendorService, addProducts, getProducts, updateVendorCoverImage, getCurrentOrders, processOrder, getOrderDetails } from "../controllers";
+import { vendorLogin, getVendorProfile, updateVendorProfile, updateVendorService, addProducts, getProducts, updateVendorCoverImage, getCurrentOrders, processOrder, getOrderDetails, createOffer, getOffers, editOffer } from "../controllers";
 import { authenticate } from "../middlewares";
 
 const router = Router();
@@ -35,4 +35,9 @@ router.post('/products', images, addProducts);
 router.get('/orders', getCurrentOrders);
 router.put('/order/:id/process', processOrder);
 router.get('/order/:id', getOrderDetails);
+/* ----------------------- Vendor Offers Feature ---------------------------- */
+router.post('/offer', createOffer);
+router.get('/offers', getOffers);
+router.put('/offer/:id', editOffer);
+//router.delete(/offer/:id);
 export { router as VendorRoute };

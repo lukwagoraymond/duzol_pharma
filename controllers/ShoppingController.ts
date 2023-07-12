@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { ProductDoc, Vendor } from "../models";
+import { Offer, ProductDoc, Vendor } from "../models";
 
 /**
  * Business Logic: Get list of vendors in particular locality
@@ -91,4 +91,19 @@ export const getPharmacyById = async (req: Request, res: Response) => {
     return res.status(200).json(vendorArr);
   }
   return res.status(404).json({ error: 'Data Not Found' });
+}
+
+/**
+ * Business Logic: Get Available Offers in a particular Area Postal Zone
+ * @req {string} contains customer pincode
+ * @res {List} JSON Object containing Offers in a particular Area Postal Zone
+ * @return {ObjectId} Status code 200 + List of available offers in area
+ */
+export const getOffersAvailable = async (req:Request, res:Response) => {
+  const pincode = req.params.pincode;
+  const offers = await Offer.find({ pincode: pincode, isActive: true });
+  if (offers) {
+    return res.status(200).json(offers);
+  }
+  return res.status(404).json({ error: 'No Offers Found!' });
 }

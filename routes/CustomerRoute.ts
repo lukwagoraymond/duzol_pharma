@@ -3,7 +3,7 @@ import express from 'express';
 import { customerSignUp, customerLogin, customerVerify,
 requestOtp, getCustomerProfile, editCustomerProfile,
 createOrder, getOrders, getOrdersById, addToCart,
-getCart, deleteCart } from '../controllers';
+getCart, deleteCart, verifyOffer, createPayment } from '../controllers';
 
 import { authenticate } from '../middlewares';
 
@@ -30,5 +30,9 @@ router.delete('/cart', deleteCart);
 router.post('/create-order', createOrder);
 router.get('/orders', getOrders);
 router.get('/order/:id', getOrdersById);
+/* ------------------ Apply for Offers -------------------------- */
+router.get('/offer/verify/:id', verifyOffer);
+/* ------------------ Customer Payments Feature -------------------------- */
+router.post('/create-payment', createPayment);
 
 export { router as CustomerRoute };

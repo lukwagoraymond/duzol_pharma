@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { EditVendorInputs, UpdateOrderStatus, VendorLoginInputs } from "../dto";
-import { Vendor } from "../models/Vendor";
-import { Product, Order } from "../models";
+import { CreateOfferInputs, EditVendorInputs, UpdateOrderStatus, VendorLoginInputs } from "../dto";
+import { Product, Order, Offer, Vendor } from "../models";
 import { generateSignature } from "../utils";
 import { findVendor } from "./AdminController";
 
@@ -65,7 +64,7 @@ export const updateVendorProfile = async (req: Request, res: Response) => {
       existingVendor.name = name;
       existingVendor.productType = productType;
       existingVendor.address = address;
-      existingVendor.phone = phone
+      existingVendor.phone = phone;
       const updatedResults = await existingVendor.save();
       return res.status(204).json(updatedResults);
     }
@@ -169,6 +168,112 @@ export const getProducts = async (req:Request, res:Response) => {
   }
   return res.status(404).json({ error: 'Vendor Informaton Not Found' });
 }
+/* ----------------------- Vendor Product Section ---------------------------- */
+
+/**
+ * Business Logic: Authorised Vendor can create a Promo Offer for their Products
+ * @req {Object} contains authenticated user payload from vendorPayload interface
+ * @res {Object} a JSON object containing Offer Object
+ * @return {Object} Status code 200 + Offer JSON Object
+ */
+export const createOffer = async (req:Request, res:Response) => {
+  const user = req.user;
+  if (user) {
+    const { offerType, title, description, minValue, offerAmount, startValidity, endValidity, promoCode, promoType, bank, bins, pincode, isActive } = <CreateOfferInputs>req.body;
+    const vendor = await findVendor(user._id);
+    if (vendor) {
+      const offer = await Offer.create({
+        offerType,
+        title,
+        description,
+        minValue,
+        offerAmount,
+        startValidity,
+        endValidity,
+        promoCode,
+        promoType,
+        bank,
+        bins,
+        pincode,
+        isActive,
+        vendors: [vendor]
+      });
+      if (offer) {
+        return res.status(201).json(offer);
+      } else {
+        return res.status(400).json({ error: 'Unable to add Vendor Offer!' });
+      }
+    }
+  }
+  res.status(400).json({ error: 'Vendor Not Authorised to Create Offer!' });
+}
+
+/**
+ * Business Logic: Authorised Vendors get a list of offers tagged to their id
+ * @req {Object} contains authenticated user payload from vendorPayload interface
+ * @res {Object} a JSON object containing List of vendor's offers
+ * @return {Object} Status code 200 + List of vendor's offers
+ */
+export const getOffers = async (req:Request, res:Response) => {
+  const user = req.user;
+  if (user) {
+    let vendorsOffers = Array();
+    const offers = await Offer.find().populate('vendors');
+    if (offers) {
+      offers.map(item => {
+        if (item.vendors) {
+          item.vendors.map(vendor => {
+            if (vendor._id.toString() === user._id) {
+              vendorsOffers.push(item);
+            }
+          });
+        }
+        if (item.offerType === 'GENERIC') {
+          vendorsOffers.push(item);
+        }
+      });
+      return res.status(200).json(vendorsOffers);
+    } else {
+      return res.status(404).json({ error: 'No Offers Found!' });
+    }
+  }
+  return res.status(400).json({ error: 'User Not Authorised to See Offers' })
+}
+
+/**
+ * Business Logic: Authorised users get list of pharmacy products from vendor catalog
+ * @req {Object} contains authenticated user payload from vendorPayload interface
+ * @res {Object} a JSON object containing List of vendor's products
+ * @return {Object} Status code 200 List of particular Vendor Products
+ */
+export const editOffer = async (req:Request, res:Response) => {
+  const user = req.user;
+  const offerId = req.params.id;
+  if (user) {
+    const { offerType, title, description, minValue, offerAmount, startValidity, endValidity, promoCode, promoType, bank, bins, pincode, isActive } = <CreateOfferInputs>req.body;
+    const currentOffer = await Offer.findById(offerId);
+    if (currentOffer) {
+      const vendor = await findVendor(user._id);
+      if (vendor) {
+        currentOffer.offerType = offerType,
+        currentOffer.title = title,
+        currentOffer.description = description,
+        currentOffer.minValue = minValue,
+        currentOffer.offerAmount = offerAmount,
+        currentOffer.startValidity = startValidity,
+        currentOffer.endValidity = endValidity,
+        currentOffer.promoType = promoType,
+        currentOffer.bank = bank,
+        currentOffer.pincode = pincode,
+        currentOffer.isActive = isActive
+
+        const updatedOffer = await currentOffer.save();
+        return res.status(200).json(updatedOffer);
+      }
+    }
+  }
+  return res.status(400).json({ error: "Unable to Edit Offer!" });
+}
 /* ----------------------- Order Processing Section ---------------------------- */
 
 /**
@@ -221,7 +326,7 @@ export const getOrderDetails = async (req:Request, res:Response) => {
  */
 export const processOrder = async (req:Request, res:Response) => {
   const orderId = req.params.id;
-  const { orderStatus, remarks, deliveryTime } = <UpdateOrderStatus>req.body;
+  const { orderStatus, remarks, deliveryTime } = <UpdateOrderStatus>req.body; //ACCEPT / REJECT / UNDER-PROCESS / READY
   if (orderId) {
     const order = await Order.findById(orderId).populate('items.product');
     if (order) {

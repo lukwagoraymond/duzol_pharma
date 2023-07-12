@@ -6,9 +6,9 @@ export interface OrderDoc extends mongoose.Document {
   vendorId: string; 
   items: [any]; //[{ product, unit: 1 }]
   totalAmount: number; //50000
-  paidThrough: string; //Mobile-Money, Credit-Card, Debit-Card
+  paidAmount: number; 
   orderDate: Date;
-  orderStatus: string; //WAITING
+  orderStatus: string; //waiting / failed / CONFIRMED / UNDER-PROCESS / REJECTED / READY
   remarks: string;
   paymentResponse: string; // { status: true, response: Bank Response }
   deliveryId: string;
@@ -26,7 +26,7 @@ const orderSchema: mongoose.Schema = new mongoose.Schema({
     }
   ],
   totalAmount: { type: Number, require: true },
-  paidThrough: { type: String },
+  paidAmount: { type: Number, required: true },
   orderDate: { type: Date },
   orderStatus: { type: String },
   remarks: { type: String },

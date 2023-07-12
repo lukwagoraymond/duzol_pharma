@@ -65,20 +65,19 @@ const customerSchema: mongoose.Schema = new mongoose.Schema({
 });
 
 // Pre-Hook Middleware function run before document is saved in DB
-customerSchema.pre('save', async function (next) {
-  if (this.isModified("password") || this.isNew) {
+customerSchema.pre('save', async function () {
+  if ((this.password && this.isModified('password')) || this.isNew) {
     const salt = await generateSalt();
     this.salt = salt;
     const password = await hashPassword(this.password, salt);
     this.password = password;
-    next();
   } else {
-    return next();
+    console.log('Password Already Hashed!');
   }
 });
 
 // Model Static Method to support Login Authentication of this Vendor
-customerSchema.statics.authLogin = async function (email: string, password: string, salt) {
+customerSchema.statics.authLogin = async function (email: string, password: string) {
   const existingCustomer = await this.findOne({ email });
   if (existingCustomer) {
     console.log(password, existingCustomer.password);
