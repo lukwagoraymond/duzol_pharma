@@ -44,9 +44,9 @@ const vendorSchema: mongoose.Schema = new mongoose.Schema({
   products: [{
     type: mongoose.SchemaTypes.ObjectId,
     ref: 'product'
-  }]
-  /*lat: { type: Number },
-  lng: { type: Number } */
+  }],
+  lat: { type: Number },
+  lng: { type: Number }
 },
 { 
   toJSON: {
@@ -62,11 +62,15 @@ const vendorSchema: mongoose.Schema = new mongoose.Schema({
 });
 
 // Pre-Hook Middleware function run before document is saved in DB
-vendorSchema.pre('save', async function (next) {
-  const salt = await generateSalt();
-  this.salt = salt;
-  this.password = await hashPassword(this.password, salt);
-  next();
+vendorSchema.pre('save', async function () {
+  if ((this.password && this.isModified('password')) || this.isNew) {
+    const salt = await generateSalt();
+    this.salt = salt;
+    const password = await hashPassword(this.password, salt);
+    this.password = password;
+  } else {
+    console.log('Password Already Hashed!');
+  }
 });
 
 // Model Static Method to support Login Authentication of this Vendor
@@ -81,7 +85,7 @@ vendorSchema.statics.authLogin = async function (email: string, password: string
 };
 
 
-// Create Model while incorporating for vendor dto
+// Create Model while incorporating for vendordoc interface
 const Vendor = mongoose.model<VendorDoc, VendorModel>('vendor', vendorSchema);
 
 export { Vendor };

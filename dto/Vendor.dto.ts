@@ -27,3 +27,25 @@ export interface VendorPayload{
   name: string;
   productType: [string];
 }
+
+export interface UpdateOrderStatus{
+  orderStatus: string;
+  deliveryTime: number;
+  remarks: string;
+}
+
+export interface CreateOfferInputs {
+  offerType: string;
+  title: string;
+  description: string;
+  minValue: number;
+  offerAmount: number;
+  startValidity: Date;
+  endValidity: Date;
+  promoCode: string;
+  promoType: string;
+  bank: [any];
+  bins: [any];
+  pincode: string;
+  isActive: boolean;
+}

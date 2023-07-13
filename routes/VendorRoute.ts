@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import multer from "multer";
-import { vendorLogin, getVendorProfile, updateVendorProfile, updateVendorService, addProducts, getProducts, updateVendorCoverImage } from "../controllers";
+import { vendorLogin, getVendorProfile, updateVendorProfile, updateVendorService, addProducts, getProducts, updateVendorCoverImage, getCurrentOrders, processOrder, getOrderDetails, createOffer, getOffers, editOffer } from "../controllers";
 import { authenticate } from "../middlewares";
 
 const router = Router();
@@ -23,12 +23,21 @@ router.get('/', (req: Request, res: Response) => {
 });
 
 router.use(authenticate);
+/* ----------------------- Vendor Profile Feature ---------------------------- */
 router.get('/profile', getVendorProfile);
 router.patch('/profile', updateVendorProfile);
 router.patch('/coverImage', images, updateVendorCoverImage);
 router.patch('/service', updateVendorService);
-
+/* ----------------------- Vendor Products Feature ---------------------------- */
 router.get('/products', getProducts);
 router.post('/products', images, addProducts);
-
+/* ----------------------- Order Processing Feature ---------------------------- */
+router.get('/orders', getCurrentOrders);
+router.put('/order/:id/process', processOrder);
+router.get('/order/:id', getOrderDetails);
+/* ----------------------- Vendor Offers Feature ---------------------------- */
+router.post('/offer', createOffer);
+router.get('/offers', getOffers);
+router.put('/offer/:id', editOffer);
+//router.delete(/offer/:id);
 export { router as VendorRoute };

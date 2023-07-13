@@ -1,7 +1,7 @@
 import { Request } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { sign } from 'jsonwebtoken';
-import { VendorPayload, AuthPayload } from '../dto';
+import { AuthPayload } from '../dto';
 import { APP_SECRET } from '../config';
 
 // Generate Salt for hashing password
@@ -19,11 +19,16 @@ export const validatePassword = async (enteredPassword: string, savedPassword: s
   return await bcrypt.compare(enteredPassword, savedPassword);
 }
 
+// Validate incoming Password to DB Password Stored 2nd Option
+export const validatePassword2 = async (enteredPassword: string, savedPassword: string, salt: string) => {
+  return await hashPassword(enteredPassword, salt) === savedPassword;
+}
+
 // Utility function to generate signature to be used for JWT
-export const generateSignature = (payload: VendorPayload) => {
+export const generateSignature = (payload: AuthPayload) => {
   // Measured in seconds: days*hours*minutes*seconds
   const maxAge = 3 * 24 * 60 * 60;
-  const signature = jwt.sign(payload, APP_SECRET, {expiresIn: maxAge});
+  const signature = sign(payload, APP_SECRET, {expiresIn: maxAge});
   return signature;
 }
 
