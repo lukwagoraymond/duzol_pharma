@@ -3,7 +3,7 @@ import { plainToClass } from 'class-transformer';
 import { validate } from 'class-validator';
 import { CreateCustomerInputs, EditCustomerProfileInput, UserLoginInput, CartItem, OrderInputs } from '../dto';
 import { generateOtp, generateSignature, onRequestOtp, validatePassword } from '../utils';
-import { Customer, Offer, Order, Product, Transaction } from '../models';
+import { Customer, DeliveryUser, Offer, Order, Product, Transaction, Vendor } from '../models';
 
 /* ---------------------------- Customer Mgt Section ---------------------------------- */
 
@@ -84,7 +84,7 @@ export const customerLogin = async (req: Request, res: Response) => {
       });
     }
   }
-  return res.status(404).json({ error: 'Error with Signup' });
+  return res.status(404).json({ error: 'Error with Signin!' });
 }
 
 /**
@@ -300,7 +300,8 @@ export const createPayment = async (req:Request, res:Response) => {
       payableAmount = (payableAmount - applied4Offer!.offerAmount);
     }
     // continue to perform Payment Gateway with DusuPay / PayU || ? API - For Later
-    //
+    // is status key after payment gateway is failed then dont create transaction record. for OPEN
+    // works when its cash on delivery.
     // Create a record of the transaction from the above Payment Gateway
     const transaction = await Transaction.create({
       customerId: user._id,
@@ -319,6 +320,36 @@ export const createPayment = async (req:Request, res:Response) => {
     }
   }
   return res.status(400).json({ error: 'Customer Not Authorised to Make Payment!' });
+}
+
+/* ---------------------------- Delivery Notification Section ------------------- */
+
+/** Util Function to Support Notify Delivery User when order is created */
+const assignOrder4Delivery = async (orderId: string, vendorId: string) => {
+  // find the vendor
+  const vendor = await Vendor.findById(vendorId);
+  if (vendor) {
+    const areaPostalCode = vendor.pincode;
+    const vendorLat = vendor.lat;
+    const vendorLng = vendor.lng;
+    // find available delivery person **Challenge for places outside Kampala & Wakiso**
+    const deliveryPerson = await DeliveryUser.find({ pincode: areaPostalCode, verified: true, isAvailable: true });
+    if (deliveryPerson) {
+      // Check for the nearest delivery person using Google Map API & Assign the Order
+      const currentOrder = await Order.findById(orderId);
+      if (currentOrder) {
+        //update Delivery ID under Order model
+        if (deliveryPerson.length > 0) {
+          // Using deliveryPerson Array 1st index since not nearest neighbour Algorithm used for now
+          currentOrder.deliveryId = deliveryPerson[0]._id;
+        } else {
+          currentOrder.deliveryId = 'SELF_DELIVERY';
+        }
+        await currentOrder.save();
+        // Notify the vendor for received order by Delivery User in FireBase Push Notification
+      }
+    }
+  }
 }
 
 /* ---------------------------- Order Section ---------------------------------- */
@@ -343,6 +374,7 @@ const validateTransaction = async(transactionId: string) => {
  */
 export const createOrder = async (req: Request, res: Response) => {
   const user = req.user;
+  // amount - tansaction.orderAmount
   const { transactionId, amount, items } = <OrderInputs>req.body
   if (user) {
     // Validate Transaction Payment of earlier placed Cart Products
@@ -390,7 +422,7 @@ export const createOrder = async (req: Request, res: Response) => {
         currentTransaction!.orderId = orderId;
         currentTransaction!.status = 'CONFIRMED';
         await currentTransaction?.save();
-       
+        await assignOrder4Delivery(orderCreated._id, vendorId);
         const updatedCustomerProfile = await customer?.save();
         return res.status(200).json(updatedCustomerProfile);
       }

@@ -36,6 +36,7 @@ export class EditCustomerProfileInput {
 
   @Length(3, 57)
   address: string;
+  // Add instance of pincode change too
 }
 
 export class CartItem {
@@ -47,4 +48,27 @@ export class OrderInputs {
   transactionId: string;
   amount: string;
   items: [CartItem];
+}
+
+export class CreateDeliveryUserInput {
+  @IsEmail()
+  email: string;
+
+  @Length(7,13)
+  phone: string;
+
+  @Length(6,24)
+  password: string;
+
+  @Length(2,20)
+  firstName: string;
+
+  @Length(2,20)
+  lastName: string;
+
+  @Length(3,57)
+  address: string;
+
+  @Length(4,12)
+  pincode: string;
 }

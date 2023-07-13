@@ -102,10 +102,16 @@ export const updateVendorCoverImage = async (req:Request, res:Response) => {
  */
 export const updateVendorService = async (req: Request, res: Response) => {
   const user = req.user;
+  // Pick coordinates from 3rd Part App API
+  const { lat, lng } = req.body;
   if(user) {
     const existingVendor = await findVendor(user._id);
     if(existingVendor) {
       existingVendor.serviceAvailable = !existingVendor.serviceAvailable;
+      if (lat && lng) {
+        existingVendor.lat = lat;
+        existingVendor.lng = lng;
+      }
       const updatedResults = await existingVendor.save();
       return res.status(200).json(updatedResults);
     }
@@ -168,7 +174,7 @@ export const getProducts = async (req:Request, res:Response) => {
   }
   return res.status(404).json({ error: 'Vendor Informaton Not Found' });
 }
-/* ----------------------- Vendor Product Section ---------------------------- */
+/* ----------------------- Vendor Offer Section ---------------------------- */
 
 /**
  * Business Logic: Authorised Vendor can create a Promo Offer for their Products

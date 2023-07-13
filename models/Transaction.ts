@@ -1,4 +1,4 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
 export interface TransactionDoc extends mongoose.Document {
   customerId: string;

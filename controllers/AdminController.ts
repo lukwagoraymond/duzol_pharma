@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { CreateVendorInput } from "../dto";
-import { Transaction, Vendor } from "../models";
+import { DeliveryUser, Transaction, Vendor } from "../models";
 
 export const findVendor = async(id: string | undefined, email?: string) => {
   if (email) {
@@ -36,9 +36,9 @@ export const createVendor = async (req: Request, res: Response) => {
       serviceAvailable: false,
       coverImages: [],
       rating: 1,
-      products: []
-      /*lat: { type: Number },
-      lng: { type: Number } */
+      products: [],
+      lat: 0,
+      lng: 0
     });
     return res.status(201).json( { vendor: vendorCreated._id });
   } catch (err) {
@@ -79,6 +79,12 @@ export const getVendorByID = async (req: Request, res: Response) => {
 }
 
 /* ----------------------- Transactions Section ---------------------------- */
+
+/**
+ * Business Logic to Aid get the list of transactions in the system
+ * @res {List} List of Transaction Objects in DB
+ * @return {List} Status code 200 + List of Transactions
+ */
 export const getTransactions = async (req:Request, res:Response) => {
   const transactions = await Transaction.find();
   if (transactions) {
@@ -87,6 +93,12 @@ export const getTransactions = async (req:Request, res:Response) => {
   return res.json({ error: 'Transactions Data Not Available' });
 }
 
+/**
+ * Business Logic to Aid get details of a particular Transaction in System
+ * @req {object} Transaction Id
+ * @res {Object} Transaction Object in System
+ * @return {Object} Status code 200 + Transaction Object
+ */
 export const getTransactionById = async (req:Request, res:Response) => {
   const transactionId = req.params.id;
   if (transactionId) {
@@ -98,4 +110,38 @@ export const getTransactionById = async (req:Request, res:Response) => {
     }
   }
   return res.status(404).json({ error: 'Transaction ID Not Found!' });
+}
+
+/* ----------------------- Delivery User Mgt Section ---------------------------- */
+
+/**
+ * Business Logic to Aid get details of a particular Transaction in System
+ * @req {object} Transaction Id + verification status
+ * @res {Object} Updated Delivery User Profile with verify status changed
+ * @return {List} Status code 200 + Updated Delivery User Account Profile
+ */
+export const verifyDeliveryUser = async (req:Request, res: Response) => {
+  const { _id, status } = req.body;
+  if (_id) {
+    const deliveryUser = await DeliveryUser.findById(_id);
+    if (deliveryUser) {
+      deliveryUser.verified = status;
+      const updatedDelUserProfile = await deliveryUser.save();
+      return res.status(200).json(updatedDelUserProfile);
+    }
+  }
+  return res.status(400).json({ error: 'Unable to verify Delivery User Account!' });
+}
+
+/**
+ * Business Logic to get List of Delivery Users in the system
+ * @res {List} List of Delivery Users in the System
+ * @return {List} Status code 200 + List of Delivery Users in the System
+ */
+export const getDeliveryUsers = async (req:Request, res: Response) => {
+  const deliveryUsers = await DeliveryUser.find();
+  if (deliveryUsers) {
+    return res.status(200).json(deliveryUsers);
+  }
+  return res.status(400).json({ error: 'No information on Delivery Users Found!' });
 }

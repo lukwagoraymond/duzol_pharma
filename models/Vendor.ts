@@ -44,9 +44,9 @@ const vendorSchema: mongoose.Schema = new mongoose.Schema({
   products: [{
     type: mongoose.SchemaTypes.ObjectId,
     ref: 'product'
-  }]
-  /*lat: { type: Number },
-  lng: { type: Number } */
+  }],
+  lat: { type: Number },
+  lng: { type: Number }
 },
 { 
   toJSON: {
