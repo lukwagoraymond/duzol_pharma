@@ -112,7 +112,7 @@ dist
 
 # Config Folder
 config/
-images/*
+#images/*
 
 # DynamoDB Local files
 .dynamodb/
