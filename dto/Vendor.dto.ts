@@ -7,6 +7,7 @@ export interface CreateVendorInput{
   phone: string;
   email: string;
   password: string;
+  rating: number
 }
 
 export interface VendorLoginInputs{

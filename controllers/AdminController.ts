@@ -17,7 +17,7 @@ export const findVendor = async(id: string | undefined, email?: string) => {
  * @return {number} Status code 200 and the vendor generated ID
  */
 export const createVendor = async (req: Request, res: Response) => {
-  const { name, ownerName, productType, pincode, address, phone, email, password } = <CreateVendorInput>req.body;
+  const { name, ownerName, productType, pincode, address, phone, email, password, rating } = <CreateVendorInput>req.body;
 
   const vendorExists = await findVendor('', email);
   if (vendorExists !== null) {
@@ -35,7 +35,7 @@ export const createVendor = async (req: Request, res: Response) => {
       password: password,
       serviceAvailable: false,
       coverImages: [],
-      rating: 1,
+      rating: rating,
       products: [],
       lat: 0,
       lng: 0
