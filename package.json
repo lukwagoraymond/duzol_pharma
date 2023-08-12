@@ -5,17 +5,28 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon index.ts"
+    "dev": "nodemon src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc -p ."
+  },
+  "engines": {
+    "node": "18.16.0",
+    "npm": "9.5.1"
   },
   "author": "Raymond Lukwago",
   "license": "MIT",
-  "dependencies": {
+  "devDependencies": {
     "@types/bcrypt": "^5.0.0",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/mongoose": "^5.11.97",
     "@types/multer": "^1.4.7",
+    "nodemon": "^2.0.22",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
     "bcrypt": "^5.1.0",
     "body-parser": "^1.20.2",
     "class-transformer": "^0.5.1",
@@ -25,9 +36,6 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.3.1",
     "multer": "^1.4.5-lts.1",
-    "nodemon": "^2.0.22",
-    "ts-node-dev": "^2.0.0",
-    "twilio": "^4.13.0",
-    "typescript": "^5.1.6"
+    "twilio": "^4.13.0"
   }
 }
