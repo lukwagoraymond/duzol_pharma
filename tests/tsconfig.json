@@ -1,0 +1,27 @@
+{
+  //"extends": "../tsconfig.json",
+  "compilerOptions": {
+  /* Language and Environment */
+  "target": "es2016",                                  
+  "lib": ["DOM", "ES6", "ESNext.AsyncIterable"],
+  "experimentalDecorators": true,                   
+  "emitDecoratorMetadata": true,
+
+  /* Modules */
+  "module": "commonjs",                              
+  "rootDir": "../src",                                
+  "moduleResolution": "node16",                    
+  "baseUrl": "./",                                  
+  "sourceMap": true,                            
+  "outDir": "./dist",                                  
+  "esModuleInterop": true,                             
+  "forceConsistentCasingInFileNames": true,           
+
+  /* Type Checking */
+  "strict": true,                                      
+  "strictPropertyInitialization": false,
+  "skipLibCheck": true                                 
+},
+"include": ["../src/**/*", "tests/**/*.ts"],
+"exclude": ["../node_modules"]
+}

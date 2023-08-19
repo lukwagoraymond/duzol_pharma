@@ -4,7 +4,9 @@ import dbConnection from './services/Database';
 import { PORT } from './config';
 
 
-const StartServer = async () => {
+export const helloTest = function() { return true; };
+
+export const StartServer = async () => {
   const app = express();
 
 // Connect to the Mongo DB Atlas Cloud Cluster
