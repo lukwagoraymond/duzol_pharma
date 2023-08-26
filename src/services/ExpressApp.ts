@@ -3,7 +3,6 @@ import path from 'path';
 import { AdminRoute, ShoppingRoute, VendorRoute, CustomerRoute, DeliveryRoute } from '../routes';
 
 export default async (app: Application) => {
-
 // Middleware for parsing incoming request data
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));

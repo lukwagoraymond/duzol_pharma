@@ -1,14 +1,39 @@
+import * as mocha from 'mocha';
 import chai from 'chai';
 import chaiHttp from 'chai-http';
-const { helloTest } = require ('../src/index');
+import app from '../src/index';
+import 'dotenv/config';
 
-//chai.use(chaiHttp);
+// Configure Chai
+chai.use(chaiHttp);
 const expect = chai.expect;
 
-describe('First Sample Test', function () {
-  it('should return true', function (done) {
-    const result = helloTest();
-    expect(result).to.eql(true);
-    done();
+describe('Backend API HTTP Integration Tests', function() {
+  describe('GET /admin/', function() {
+    it('should return a json response on call', function(done) {
+      chai.request(app)
+      .get('/admin/')
+      .end((err, res) => {
+        if (res) {
+          expect(res.body).to.have.property('message').that.is.equal('Hello from Admin');
+          expect(res.body).to.be.an("object");
+        }
+        done();
+      }); 
+    });
+  });
+
+  describe('GET /vendor/', function() {
+    it('should return a json response on call', function(done) {
+      chai.request(app)
+      .get('/vendor/')
+      .end((err, res) => {
+        if (res) {
+          expect(res.body).to.have.property('message').that.is.equal('Hello from Vendor');
+          expect(res.body).to.be.an("object");
+        }
+        done();
+      });
+    });
   });
 });

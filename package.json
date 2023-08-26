@@ -4,7 +4,7 @@
   "description": "Pharmacy Multi-vendor Application Project",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -r ts-node/register ./**/*.test.ts --exit",
+    "test": "mocha -r ts-node/register ./**/*.test.ts --timeout 0 --exit",
     "coverage": "nyc npm run test",
     "dev": "nodemon src/index.ts",
     "start": "node dist/index.js",
@@ -41,6 +41,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.3.1",

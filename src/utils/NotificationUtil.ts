@@ -1,4 +1,5 @@
-import { accountSid, authToken, twilioNumber } from "../config";
+//import { accountSid, authToken, twilioNumber } from "../config";
+import 'dotenv/config';
 
 /* ----------------- OTP ------------------- */
 export const generateOtp = () => {
@@ -12,12 +13,12 @@ export const generateOtp = () => {
 /* ----------------- Notification ------------------- */
 export const onRequestOtp = async (otp: number, toPhoneNumber: string) => {
   try {
-    const accSid = accountSid;
-    const autToken = authToken;
+    const accSid = `${process.env.ACCOUNTSID}`;
+    const autToken = `${process.env.AUTHTOKEN}`;
     const client = require('twilio')(accSid, autToken);
     const response = await client.messages.create({
       body: `Your OTP Token is ${otp}`,
-      from: `${twilioNumber}`,
+      from: `${process.env.TWILIONUMBER}`,
       to: `${toPhoneNumber}`
     });
     return response;

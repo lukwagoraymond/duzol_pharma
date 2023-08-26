@@ -2,7 +2,8 @@ import { Request } from 'express';
 import bcrypt from 'bcrypt';
 import jwt, { sign } from 'jsonwebtoken';
 import { AuthPayload } from '../dto';
-import { APP_SECRET } from '../config';
+//import { APP_SECRET } from '../config';
+import 'dotenv/config';
 
 // Generate Salt for hashing password
 export const generateSalt = async () => {
@@ -28,7 +29,7 @@ export const validatePassword2 = async (enteredPassword: string, savedPassword: 
 export const generateSignature = (payload: AuthPayload) => {
   // Measured in seconds: days*hours*minutes*seconds
   const maxAge = 3 * 24 * 60 * 60;
-  const signature = sign(payload, APP_SECRET, {expiresIn: maxAge});
+  const signature = sign(payload, `${process.env.APP_SECRET}`, {expiresIn: maxAge});
   return signature;
 }
 
@@ -36,7 +37,7 @@ export const generateSignature = (payload: AuthPayload) => {
 export const validateSignature = async (req: Request) => {
   const signature = req.get('Authorization');
   if (signature) {
-    const payload = await jwt.verify(signature.split(' ')[1], APP_SECRET) as AuthPayload;
+    const payload = await jwt.verify(signature.split(' ')[1], `${process.env.APP_SECRET}`) as AuthPayload;
     req.user = payload;
     return true;
   }
