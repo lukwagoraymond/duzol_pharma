@@ -1,13 +1,11 @@
 import express, { Application } from 'express';
-import bodyParser from 'body-parser';
 import path from 'path';
 import { AdminRoute, ShoppingRoute, VendorRoute, CustomerRoute, DeliveryRoute } from '../routes';
 
 export default async (app: Application) => {
-
 // Middleware for parsing incoming request data
-  app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: true }));
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
 // Configuration for Static-files
   app.use('/images', express.static(path.join(__dirname, '../images')));
