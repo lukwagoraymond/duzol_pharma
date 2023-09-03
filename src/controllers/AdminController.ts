@@ -21,7 +21,7 @@ export const createVendor = async (req: Request, res: Response) => {
 
   const vendorExists = await findVendor('', email);
   if (vendorExists !== null) {
-    return res.json({ error: 'Vendor already exists with this EmailID' });
+    return res.status(400).json({ error: 'Vendor already exists with this EmailID' });
   }
   try {
     const vendorCreated = await Vendor.create({
